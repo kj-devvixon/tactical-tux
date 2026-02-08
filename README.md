@@ -59,7 +59,7 @@ sudo apt install libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev libglew-dev libgl
 
 2. **Clone the repository:**
 ```bash
-git clone https://github.com/YOUR_USERNAME/tactical-tux.git
+git clone https://github.com/kj-devvixon/tactical-tux.git
 cd tactical-tux
 ```
 
