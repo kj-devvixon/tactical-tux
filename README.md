@@ -31,9 +31,8 @@
 - [ ] Menu system
 - [ ] Multiplayer support (distant future)
 
-## 📸 Screenshots
+## 📸 Screenshots/GIF's
 
-![Tactical Tux Screenshot](screenshots/gameplay1.png)
 ![Tactical Tux GIF](screenshots/2026-02-0919-59-53-ezgif.com-video-to-gif-converter.gif)
 *Early alpha gameplay - showing basic level geometry and crosshair*
 
