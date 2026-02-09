@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="screenshots/logo.png" alt="Tactical Tux Logo" width="300">
+</p>
+
 # 🐧 Tactical Tux
 
 ![Early Alpha](https://img.shields.io/badge/status-early%20alpha-orange)
