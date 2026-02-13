@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="screenshots/logo.png" alt="Tactical Tux Logo" width="300">
+</p>
+
 # 🐧 Tactical Tux
 
 ![Early Alpha](https://img.shields.io/badge/status-early%20alpha-orange)
@@ -31,9 +35,10 @@
 - [ ] Menu system
 - [ ] Multiplayer support (distant future)
 
-## 📸 Screenshots
+## 📸 Screenshots/GIF's
 
-![Tactical Tux Screenshot](screenshots/gameplay1.png)
+![Tactical Tux GIF](gameplay1.gif)
+
 *Early alpha gameplay - showing basic level geometry and crosshair*
 
 ## 🛠️ Building from Source
