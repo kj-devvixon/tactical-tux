@@ -1,15 +1,9 @@
 #include "MapEditor.h"
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
 
-MapEditor::MapEditor() 
-    : editorMode(false), selectedObject(-1) {
-    newObjectTemplate = MapObject(glm::vec3(0.0f, 0.5f, 0.0f), 
-                                   glm::vec3(1.0f), 
-                                   glm::vec3(0.8f, 0.2f, 0.2f),
-                                   true);
-}
+MapEditor::MapEditor() : editorMode(false), selectedObject(0) {}
 
 void MapEditor::addObject(MapObject obj) {
     objects.push_back(obj);
@@ -22,50 +16,50 @@ void MapEditor::removeObject(int index) {
 }
 
 void MapEditor::update() {
-    // This will be called from main loop
-    // ImGui rendering happens in main.cpp
+    // Tutaj możesz dodać logikę aktualizacji edytora
 }
 
 void MapEditor::saveMap(const std::string& filename) {
-    std::ofstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Failed to save map: " << filename << std::endl;
+    std::ofstream mapFile(filename);
+
+    if (!mapFile.is_open()) {
+        std::cerr << "Blad: Nie mozna otworzyc pliku do zapisu: " << filename << std::endl;
         return;
     }
-    
-    file << objects.size() << "\n";
+
     for (const auto& obj : objects) {
-        file << obj.position.x << " " << obj.position.y << " " << obj.position.z << " "
-             << obj.scale.x << " " << obj.scale.y << " " << obj.scale.z << " "
-             << obj.color.r << " " << obj.color.g << " " << obj.color.b << " "
-             << obj.isWall << "\n";
+        // Zapisujemy: pozycja(x,y,z) skala(x,y,z) kolor(r,g,b) czyWall
+        mapFile << obj.position.x << " " << obj.position.y << " " << obj.position.z << " "
+                << obj.scale.x << " " << obj.scale.y << " " << obj.scale.z << " "
+                << obj.color.r << " " << obj.color.g << " " << obj.color.b << " "
+                << obj.isWall << "\n";
     }
-    
-    file.close();
-    std::cout << "Map saved: " << filename << std::endl;
+
+    mapFile.close();
+    std::cout << "Mapa zapisana: " << filename << std::endl;
 }
 
 void MapEditor::loadMap(const std::string& filename) {
-    std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cerr << "Failed to load map: " << filename << std::endl;
+    std::ifstream mapFile(filename);
+
+    if (!mapFile.is_open()) {
+        std::cerr << "Informacja: Brak pliku mapy " << filename << ". Startuje czysta mapa." << std::endl;
         return;
     }
-    
+
     objects.clear();
-    
-    int count;
-    file >> count;
-    
-    for (int i = 0; i < count; i++) {
-        MapObject obj;
-        file >> obj.position.x >> obj.position.y >> obj.position.z
-             >> obj.scale.x >> obj.scale.y >> obj.scale.z
-             >> obj.color.r >> obj.color.g >> obj.color.b
-             >> obj.isWall;
-        objects.push_back(obj);
+
+    std::string line;
+    while (std::getline(mapFile, line)) {
+        std::stringstream ss(line);
+        glm::vec3 pos, scl, col;
+        bool wall;
+
+        if (ss >> pos.x >> pos.y >> pos.z >> scl.x >> scl.y >> scl.z >> col.r >> col.g >> col.b >> wall) {
+            addObject(MapObject(pos, scl, col, wall));
+        }
     }
-    
-    file.close();
-    std::cout << "Map loaded: " << filename << " (" << count << " objects)" << std::endl;
+
+    mapFile.close();
+    std::cout << "Mapa wczytana: " << filename << " (Obiektow: " << objects.size() << ")" << std::endl;
 }

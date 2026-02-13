@@ -17,7 +17,7 @@ struct AABB {
 struct CollisionBox {
     glm::vec3 position;
     glm::vec3 size;
-    
+
     CollisionBox(glm::vec3 pos, glm::vec3 sz) : position(pos), size(sz) {}
     AABB getAABB() const;
 };
@@ -27,20 +27,20 @@ public:
     static const float GRAVITY;
     static const float PLAYER_HEIGHT;
     static const float PLAYER_RADIUS;
-    
+
     std::vector<CollisionBox> collisionBoxes;
-    
+
     Physics();
-    
+
     void addCollisionBox(glm::vec3 position, glm::vec3 size);
     bool checkCollision(glm::vec3 position, glm::vec3 size);
-    
+
     // Resolve collision and return valid position
     glm::vec3 resolveCollision(glm::vec3 oldPos, glm::vec3 newPos, glm::vec3 size);
-    
+
     // Check if player is on ground
     bool isOnGround(glm::vec3 position, glm::vec3 size);
-    
+
     void clear();
 };
 

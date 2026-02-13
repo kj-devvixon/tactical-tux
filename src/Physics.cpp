@@ -66,7 +66,6 @@ bool Physics::isOnGround(glm::vec3 position, glm::vec3 size) {
     glm::vec3 testPos = position - glm::vec3(0.0f, 0.05f, 0.0f);
     return checkCollision(testPos, size);
 }
-
 void Physics::clear() {
     collisionBoxes.clear();
 }

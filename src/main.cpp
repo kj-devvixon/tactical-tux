@@ -20,6 +20,7 @@ MapEditor* globalEditor = nullptr;
 Physics* globalPhysics = nullptr;
 bool editorMode = false;
 
+// Prototypy funkcji
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xPos, double yPos);
 void scroll_callback(GLFWwindow* window, double xOffset, double yOffset);
@@ -59,35 +60,35 @@ int main() {
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
     Shader shader("shaders/vertex.glsl", "shaders/fragment.glsl");
-    
+
     Physics physics;
     globalPhysics = &physics;
-    
+
     Player player(glm::vec3(0.0f, 3.0f, 5.0f));
     player.setPhysics(&physics);
     globalPlayer = &player;
 
     Crosshair crosshair;
-    
+
     MapEditor mapEditor;
     globalEditor = &mapEditor;
 
     Mesh* floor = createFloor(20.0f, glm::vec3(0.2f, 0.35f, 0.25f));
-    
+
+    // NAPRAWA: Tworzymy mesh raz przed pętlą, żeby nie alokować pamięci GPU co klatkę
+    Mesh* cubeMesh = createCube(glm::vec3(1.0f));
+
+    // Próba wczytania mapy na starcie
     mapEditor.loadMap("map.txt");
-    
+
     if (mapEditor.objects.empty()) {
+        // Jeśli plik nie istnieje lub jest pusty, ładujemy domyślne obiekty
         physics.addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
-        
         mapEditor.addObject(MapObject(glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(1.0f), glm::vec3(0.8f, 0.2f, 0.2f), true));
         mapEditor.addObject(MapObject(glm::vec3(3.0f, 0.5f, 2.0f), glm::vec3(1.0f), glm::vec3(0.2f, 0.8f, 0.2f), true));
-        mapEditor.addObject(MapObject(glm::vec3(-3.0f, 0.5f, -2.0f), glm::vec3(1.0f), glm::vec3(0.2f, 0.2f, 0.8f), true));
-        mapEditor.addObject(MapObject(glm::vec3(8.0f, 1.5f, 0.0f), glm::vec3(1.0f, 3.0f, 10.0f), glm::vec3(0.5f, 0.5f, 0.5f), true));
-        mapEditor.addObject(MapObject(glm::vec3(-8.0f, 1.5f, 0.0f), glm::vec3(1.0f, 3.0f, 10.0f), glm::vec3(0.5f, 0.5f, 0.5f), true));
-        mapEditor.addObject(MapObject(glm::vec3(0.0f, 1.5f, 8.0f), glm::vec3(10.0f, 3.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), true));
-        mapEditor.addObject(MapObject(glm::vec3(0.0f, 1.5f, -8.0f), glm::vec3(10.0f, 3.0f, 1.0f), glm::vec3(0.5f, 0.5f, 0.5f), true));
     }
-    
+
+    // Inicjalizacja fizyki dla wczytanych obiektów
     for (const auto& obj : mapEditor.objects) {
         if (obj.isWall) {
             physics.addCollisionBox(obj.position, obj.scale);
@@ -98,18 +99,8 @@ int main() {
     float lastFrame = 0.0f;
 
     std::cout << "=== TACTICAL TUX - FPS ENGINE ===" << std::endl;
-    std::cout << "Controls:" << std::endl;
-    std::cout << "  WASD - Move" << std::endl;
-    std::cout << "  Mouse - Look" << std::endl;
-    std::cout << "  Space - Jump" << std::endl;
-    std::cout << "  Left Click - Shoot" << std::endl;
-    std::cout << "  E - Editor Mode" << std::endl;
-    std::cout << "  ESC - Exit\n" << std::endl;
-    std::cout << "Editor (Press E):" << std::endl;
-    std::cout << "  P - Place object" << std::endl;
-    std::cout << "  L - Delete last" << std::endl;
-    std::cout << "  S - Save map" << std::endl;
-    std::cout << "  O - Load map\n" << std::endl;
+    std::cout << "Controls: WASD (Move), Mouse (Look), Space (Jump), E (Editor)" << std::endl;
+    std::cout << "Editor: P (Place), L (Delete Last), S/F5 (Save), O/F9 (Load)" << std::endl;
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -119,12 +110,13 @@ int main() {
         player.processInput(window, deltaTime);
         player.update(deltaTime);
 
+        // Mechanika strzelania
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !editorMode) {
             static float lastShot = 0.0f;
             if (currentFrame - lastShot > 0.3f) {
                 glm::vec3 hitPoint;
                 if (raycast(player.camera.position, player.camera.front, physics.collisionBoxes, 100.0f, hitPoint)) {
-                    std::cout << "HIT! " << hitPoint.x << "," << hitPoint.y << "," << hitPoint.z << std::endl;
+                    std::cout << "HIT! AT: " << hitPoint.x << " " << hitPoint.y << " " << hitPoint.z << std::endl;
                 }
                 lastShot = currentFrame;
             }
@@ -139,18 +131,19 @@ int main() {
         glm::mat4 view = player.camera.getViewMatrix();
         shader.setMat4("view", view);
 
+        // Renderowanie podłogi
         glm::mat4 model = glm::mat4(1.0f);
         shader.setMat4("model", model);
         floor->draw();
 
+        // Renderowanie obiektów zoptymalizowane
         for (const auto& obj : mapEditor.objects) {
             model = glm::mat4(1.0f);
             model = glm::translate(model, obj.position);
             model = glm::scale(model, obj.scale);
             shader.setMat4("model", model);
-            Mesh* cube = createCube(obj.color);
-            cube->draw();
-            delete cube;
+            // Tutaj możesz dodać shader.setVec3("uColor", obj.color) jeśli Twój shader to wspiera
+            cubeMesh->draw();
         }
 
         crosshair.draw(SCR_WIDTH, SCR_HEIGHT);
@@ -160,10 +153,77 @@ int main() {
     }
 
     delete floor;
+    delete cubeMesh; // Czyszczenie pamięci
     glfwTerminate();
     return 0;
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        if (key == GLFW_KEY_ESCAPE) glfwSetWindowShouldClose(window, true);
+
+        if (key == GLFW_KEY_E) {
+            editorMode = !editorMode;
+            if (editorMode) {
+                std::cout << "\n[EDITOR MODE ACTIVE]" << std::endl;
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            } else {
+                std::cout << "\n[GAME MODE ACTIVE]" << std::endl;
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                globalPlayer->firstMouse = true;
+            }
+        }
+
+        if (editorMode && globalEditor) {
+            // Dodawanie obiektu
+            if (key == GLFW_KEY_P) {
+                glm::vec3 spawnPos = globalPlayer->camera.position + globalPlayer->camera.front * 3.0f;
+                MapObject newObj(spawnPos, glm::vec3(1.0f), glm::vec3(0.8f, 0.2f, 0.2f), true);
+                globalEditor->addObject(newObj);
+                globalPhysics->addCollisionBox(newObj.position, newObj.scale);
+                std::cout << "Object spawned at current view." << std::endl;
+            }
+
+            // Usuwanie ostatniego obiektu
+            if (key == GLFW_KEY_L && !globalEditor->objects.empty()) {
+                globalEditor->removeObject(globalEditor->objects.size() - 1);
+                globalPhysics->clear();
+                globalPhysics->addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
+                for (const auto& obj : globalEditor->objects) {
+                    if (obj.isWall) globalPhysics->addCollisionBox(obj.position, obj.scale);
+                }
+                std::cout << "Last object removed." << std::endl;
+            }
+
+            // ZAPIS (S lub F5)
+            if (key == GLFW_KEY_S || key == GLFW_KEY_F5) {
+                globalEditor->saveMap("map.txt");
+                std::cout << "Map saved to map.txt" << std::endl;
+            }
+
+            // WCZYTANIE (O lub F9)
+            if (key == GLFW_KEY_O || key == GLFW_KEY_F9) {
+                globalEditor->loadMap("map.txt");
+
+                // 1. CZYŚCIMY fizykę, żeby nie dublować starych ścian
+                globalPhysics->clear();
+
+                // 2. DODAJEMY PODŁOGĘ (zawsze musi być, a clear ją usunął)
+                globalPhysics->addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
+
+                // 3. PRZEPISUJEMY obiekty z edytora do fizyki
+                for (const auto& obj : globalEditor->objects) {
+                if (obj.isWall) {
+            globalPhysics->addCollisionBox(obj.position, obj.scale);
+        }
+    }
+    std::cout << "Map loaded and physics updated!" << std::endl;
+}
+        }
+    }
+}
+
+// Reszta callbacków bez zmian strukturalnych
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -180,75 +240,25 @@ void scroll_callback(GLFWwindow* window, double xOffset, double yOffset) {
     }
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (action == GLFW_PRESS) {
-        if (key == GLFW_KEY_E) {
-            editorMode = !editorMode;
-            if (editorMode) {
-                std::cout << "\n[EDITOR ON]" << std::endl;
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            } else {
-                std::cout << "\n[EDITOR OFF]" << std::endl;
-                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-                globalPlayer->firstMouse = true;
-            }
-        }
-        
-        if (editorMode && globalEditor) {
-            if (key == GLFW_KEY_P) {
-                glm::vec3 spawnPos = globalPlayer->camera.position + globalPlayer->camera.front * 3.0f;
-                MapObject newObj(spawnPos, glm::vec3(1.0f), glm::vec3(0.8f, 0.2f, 0.2f), true);
-                globalEditor->addObject(newObj);
-                globalPhysics->addCollisionBox(newObj.position, newObj.scale);
-                std::cout << "Placed at " << spawnPos.x << "," << spawnPos.y << "," << spawnPos.z << std::endl;
-            }
-            
-            if (key == GLFW_KEY_L && !globalEditor->objects.empty()) {
-                globalEditor->removeObject(globalEditor->objects.size() - 1);
-                globalPhysics->clear();
-                globalPhysics->addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
-                for (const auto& obj : globalEditor->objects) {
-                    if (obj.isWall) globalPhysics->addCollisionBox(obj.position, obj.scale);
-                }
-                std::cout << "Deleted" << std::endl;
-            }
-            
-            if (key == GLFW_KEY_S) {
-                globalEditor->saveMap("map.txt");
-            }
-            
-            if (key == GLFW_KEY_O) {
-                globalEditor->loadMap("map.txt");
-                globalPhysics->clear();
-                globalPhysics->addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
-                for (const auto& obj : globalEditor->objects) {
-                    if (obj.isWall) globalPhysics->addCollisionBox(obj.position, obj.scale);
-                }
-            }
-        }
-    }
-}
-
 bool raycast(glm::vec3 origin, glm::vec3 direction, const std::vector<CollisionBox>& boxes, float maxDistance, glm::vec3& hitPoint) {
     float closestDist = maxDistance;
     bool hit = false;
-    
+
     for (const auto& box : boxes) {
         AABB aabb = box.getAABB();
-        glm::vec3 invDir = 1.0f / direction;
+        glm::vec3 invDir = 1.0f / (direction + glm::vec3(0.00001f)); // Epsilon przeciw dzieleniu przez zero
         glm::vec3 t0 = (aabb.min - origin) * invDir;
         glm::vec3 t1 = (aabb.max - origin) * invDir;
         glm::vec3 tmin = glm::min(t0, t1);
         glm::vec3 tmax = glm::max(t0, t1);
         float tNear = glm::max(glm::max(tmin.x, tmin.y), tmin.z);
         float tFar = glm::min(glm::min(tmax.x, tmax.y), tmax.z);
-        
+
         if (tNear < tFar && tNear > 0.0f && tNear < closestDist) {
             closestDist = tNear;
             hitPoint = origin + direction * tNear;
             hit = true;
         }
     }
-    
     return hit;
 }
