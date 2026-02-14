@@ -6,7 +6,7 @@
 
 ![Early Alpha](https://img.shields.io/badge/status-early%20alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![Platform](https://img.shields.io/badge/platform-Linux-yellow)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-yellow)
 
 **Tactical Tux** is an open-source 3D FPS game engine built from scratch using OpenGL and C++. No external game engines - just raw code and determination! 🚀
 
@@ -43,41 +43,59 @@
 
 ## 🛠️ Building from Source
 
+### Cross-Platform Support
+
+Tactical Tux now builds on **Linux** and **macOS**! All dependencies are automatically downloaded via CMake FetchContent.
+
 ### Requirements
 
-- Linux (tested on Pop!_OS / Ubuntu 24.04)
+**Linux:**
 - GCC/G++ compiler
-- CMake 3.10+
-- OpenGL
-- GLFW3
-- GLEW
-- GLM
+- CMake 3.14+
+- X11 development libraries
 
-### Installation
+**macOS:**
+- Xcode Command Line Tools
+- CMake 3.14+
 
-1. **Install dependencies:**
+### Quick Start
+
+**Linux:**
 ```bash
+# Install dependencies
 sudo apt update
-sudo apt install build-essential cmake git
-sudo apt install libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev libglew-dev libglm-dev
-```
+sudo apt install build-essential cmake git xorg-dev libgl1-mesa-dev
 
-2. **Clone the repository:**
-```bash
+# Clone and build
 git clone https://github.com/kj-devvixon/tactical-tux.git
 cd tactical-tux
-```
-
-3. **Build:**
-```bash
 chmod +x build.sh
 ./build.sh
-```
 
-4. **Run:**
-```bash
+# Run
 ./build/TacticalTux
 ```
+
+**macOS:**
+```bash
+# Install dependencies
+brew install cmake
+
+# Clone and build
+git clone https://github.com/kj-devvixon/tactical-tux.git
+cd tactical-tux
+chmod +x build.sh
+./build.sh
+
+# Run
+./build/TacticalTux
+```
+
+> 📝 **Note:** First build will take 2-5 minutes as CMake downloads GLFW, GLEW, and GLM automatically. Subsequent builds are much faster!
+
+### Manual Build
+
+If you prefer manual building, see [BUILD.md](BUILD.md) for detailed instructions.
 
 ## 🎮 Controls
 
@@ -152,4 +170,4 @@ Have questions or suggestions? Open an issue on GitHub!
 
 ---
 
-**Made with ❤️ and C++ on Linux** 🐧
+**Made with ❤️ and C++ - Cross-Platform Gaming!** 🐧 🍎

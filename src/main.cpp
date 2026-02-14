@@ -81,14 +81,16 @@ int main() {
     // Próba wczytania mapy na starcie
     mapEditor.loadMap("map.txt");
 
+    // ZAWSZE dodajemy podłogę do fizyki
+    physics.addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
+
     if (mapEditor.objects.empty()) {
         // Jeśli plik nie istnieje lub jest pusty, ładujemy domyślne obiekty
-        physics.addCollisionBox(glm::vec3(0.0f, -0.5f, 0.0f), glm::vec3(40.0f, 1.0f, 40.0f));
         mapEditor.addObject(MapObject(glm::vec3(0.0f, 0.5f, 0.0f), glm::vec3(1.0f), glm::vec3(0.8f, 0.2f, 0.2f), true));
         mapEditor.addObject(MapObject(glm::vec3(3.0f, 0.5f, 2.0f), glm::vec3(1.0f), glm::vec3(0.2f, 0.8f, 0.2f), true));
     }
 
-    // Inicjalizacja fizyki dla wczytanych obiektów
+    // Inicjalizacja fizyki dla wczytanych/domyślnych obiektów
     for (const auto& obj : mapEditor.objects) {
         if (obj.isWall) {
             physics.addCollisionBox(obj.position, obj.scale);
