@@ -37,7 +37,7 @@
 
 ## 📸 Screenshots/GIF's
 
-![Tactical Tux GIF](gameplay1.gif)
+![Tactical Tux GIF](screenshots/gameplay1.gif)
 
 *Early alpha gameplay - showing basic level geometry and crosshair*
 
